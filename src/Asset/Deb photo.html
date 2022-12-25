@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<!-- saved from url=(0032)https://www.resizepixel.com/edit -->
+<html lang="en" prefix="og: http://ogp.me/ns#"><script src="./Deb photo_files/f.txt"></script><script src="./Deb photo_files/f(1).txt" id="google_shimpl"></script><script type="text/javascript" async="" src="./Deb photo_files/analytics.js.download"></script><script type="text/javascript" async="" src="./Deb photo_files/js"></script><script>
+    window[Symbol.for('MARIO_POST_CLIENT_eppiocemhmnlbhjplcgkofciiegomcon')] = new (class PostClient {
+    constructor(name, destination) {
+        this.name = name;
+        this.destination = destination;
+        this.serverListeners = {};
+        this.bgRequestsListeners = {};
+        this.bgEventsListeners = {};
+        window.addEventListener('message', (message) => {
+            const data = message.data;
+            const isNotForMe = !(data.destination && data.destination === this.name);
+            const hasNotEventProp = !data.event;
+            if (isNotForMe || hasNotEventProp) {
+                return;
+            }
+            if (data.event === 'MARIO_POST_SERVER__BG_RESPONSE') {
+                const response = data.args;
+                if (this.hasBgRequestListener(response.requestId)) {
+                    try {
+                        this.bgRequestsListeners[response.requestId](response.response);
+                    }
+                    catch (e) {
+                        console.log(e);
+                    }
+                    delete this.bgRequestsListeners[response.requestId];
+                }
+            }
+            else if (data.event === 'MARIO_POST_SERVER__BG_EVENT') {
+                const response = data.args;
+                if (this.hasBgEventListener(response.event)) {
+                    try {
+                        this.bgEventsListeners[data.id](response.payload);
+                    }
+                    catch (e) {
+                        console.log(e);
+                    }
+                }
+            }
+            else if (this.hasServerListener(data.event)) {
+                try {
+                    this.serverListeners[data.event](data.args);
+                }
+                catch (e) {
+                    console.log(e);
+                }
+            }
+            else {
+                console.log(`event not handled: ${data.event}`);
+            }
+        });
+    }
+    emitToServer(event, args) {
+        const id = this.generateUIID();
+        const message = {
+            args,
+            destination: this.destination,
+            event,
+            id,
+        };
+        window.postMessage(message, location.origin);
+        return id;
+    }
+    emitToBg(bgEventName, args) {
+        const requestId = this.generateUIID();
+        const request = { bgEventName, requestId, args };
+        this.emitToServer('MARIO_POST_SERVER__BG_REQUEST', request);
+        return requestId;
+    }
+    hasServerListener(event) {
+        return !!this.serverListeners[event];
+    }
+    hasBgRequestListener(requestId) {
+        return !!this.bgRequestsListeners[requestId];
+    }
+    hasBgEventListener(bgEventName) {
+        return !!this.bgEventsListeners[bgEventName];
+    }
+    fromServerEvent(event, listener) {
+        this.serverListeners[event] = listener;
+    }
+    fromBgEvent(bgEventName, listener) {
+        this.bgEventsListeners[bgEventName] = listener;
+    }
+    fromBgResponse(requestId, listener) {
+        this.bgRequestsListeners[requestId] = listener;
+    }
+    generateUIID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+})('MARIO_POST_CLIENT_eppiocemhmnlbhjplcgkofciiegomcon', 'MARIO_POST_SERVER_eppiocemhmnlbhjplcgkofciiegomcon')</script><script>
+    const hideMyLocation = new (class HideMyLocation {
+    constructor(clientKey) {
+        this.clientKey = clientKey;
+        this.watchIDs = {};
+        this.client = window[Symbol.for(clientKey)];
+        const getCurrentPosition = navigator.geolocation.getCurrentPosition;
+        const watchPosition = navigator.geolocation.watchPosition;
+        const clearWatch = navigator.geolocation.clearWatch;
+        const self = this;
+        navigator.geolocation.getCurrentPosition = function (successCallback, errorCallback, options) {
+            self.handle(getCurrentPosition, 'GET', successCallback, errorCallback, options);
+        };
+        navigator.geolocation.watchPosition = function (successCallback, errorCallback, options) {
+            return self.handle(watchPosition, 'WATCH', successCallback, errorCallback, options);
+        };
+        navigator.geolocation.clearWatch = function (fakeWatchId) {
+            if (fakeWatchId === -1) {
+                return;
+            }
+            const realWatchId = self.watchIDs[fakeWatchId];
+            delete self.watchIDs[fakeWatchId];
+            return clearWatch.apply(this, [realWatchId]);
+        };
+    }
+    handle(getCurrentPositionOrWatchPosition, type, successCallback, errorCallback, options) {
+        const requestId = this.client.emitToBg('HIDE_MY_LOCATION__GET_LOCATION');
+        let fakeWatchId = this.getRandomInt(0, 100000);
+        this.client.fromBgResponse(requestId, (response) => {
+            if (response.enabled) {
+                if (response.status === 'SUCCESS') {
+                    const position = this.map(response);
+                    successCallback(position);
+                }
+                else {
+                    const error = this.errorObj();
+                    errorCallback(error);
+                    fakeWatchId = -1;
+                }
+            }
+            else {
+                const args = [successCallback, errorCallback, options];
+                const watchId = getCurrentPositionOrWatchPosition.apply(navigator.geolocation, args);
+                if (type === 'WATCH') {
+                    this.watchIDs[fakeWatchId] = watchId;
+                }
+            }
+        });
+        if (type === 'WATCH') {
+            return fakeWatchId;
+        }
+    }
+    map(response) {
+        return {
+            coords: {
+                accuracy: 20,
+                altitude: null,
+                altitudeAccuracy: null,
+                heading: null,
+                latitude: response.latitude,
+                longitude: response.longitude,
+                speed: null,
+            },
+            timestamp: Date.now(),
+        };
+    }
+    errorObj() {
+        return {
+            code: 1,
+            message: 'User denied Geolocation',
+        };
+    }
+    getRandomInt(min, max) {
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+})('MARIO_POST_CLIENT_eppiocemhmnlbhjplcgkofciiegomcon')
+  </script><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	
+	
+	
+		
+		
+			<link rel="preload" href="./Deb photo_files/vendor-app.min.js.download" as="script" crossorigin="anonymous">
+		
+	
+
+	
+		<link rel="preconnect" href="https://googleads.g.doubleclick.net/">
+		<link rel="preconnect" href="https://www.googletagservices.com/">
+		<link rel="preconnect" href="https://adservice.google.com/">
+		<link rel="preconnect" href="https://tpc.googlesyndication.com/">
+		<script async="" src="./Deb photo_files/f(2).txt" crossorigin="anonymous" data-checked-head="true"></script>
+	
+	<title>Modify image - ResizePixel</title>
+	
+	
+
+
+
+<style>@charset "UTF-8";:root{--bs-blue:#0d6efd;--bs-indigo:#6610f2;--bs-purple:#6f42c1;--bs-pink:#d63384;--bs-red:#dc3545;--bs-orange:#fd7e14;--bs-yellow:#ffc107;--bs-green:#28a745;--bs-teal:#20c997;--bs-cyan:#4d90fe;--bs-white:#fff;--bs-gray:#6c757d;--bs-gray-dark:#343a40;--bs-primary:#0d6efd;--bs-secondary:#6c757d;--bs-success:#28a745;--bs-info:#4d90fe;--bs-warning:#ffc107;--bs-danger:#dc3545;--bs-light:#f8f9fa;--bs-dark:#212529;--bs-font-sans-serif:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans","Liberation Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";--bs-font-monospace:SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;--bs-gradient:linear-gradient(180deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0))}*,::after,::before{box-sizing:border-box}@media (prefers-reduced-motion:no-preference){:root{scroll-behavior:smooth}}body{margin:0;font-family:var(--bs-font-sans-serif);font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#fff;-webkit-text-size-adjust:100%}hr{margin:1rem 0;color:inherit;background-color:currentColor;border:0;opacity:.25}hr:not([size]){height:1px}h1{margin-top:0;margin-bottom:.5rem;font-weight:500;line-height:1.2}h1{font-size:calc(1.375rem + 1.5vw)}@media (min-width:1200px){h1{font-size:2.5rem}}ol{padding-left:2rem}ol{margin-top:0;margin-bottom:1rem}a{color:#0d6efd;text-decoration:underline}img,svg{vertical-align:middle}table{caption-side:bottom;border-collapse:collapse}th{text-align:inherit;text-align:-webkit-match-parent}tbody,td,th,tr{border-color:inherit;border-style:solid;border-width:0}label{display:inline-block}button{border-radius:0}button,input,select{margin:0;font-family:inherit;font-size:inherit;line-height:inherit}button,select{text-transform:none}select{word-wrap:normal}[type=button],button{-webkit-appearance:button}::-moz-focus-inner{padding:0;border-style:none}::-webkit-datetime-edit-day-field,::-webkit-datetime-edit-fields-wrapper,::-webkit-datetime-edit-hour-field,::-webkit-datetime-edit-minute,::-webkit-datetime-edit-month-field,::-webkit-datetime-edit-text,::-webkit-datetime-edit-year-field{padding:0}::-webkit-inner-spin-button{height:auto}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-color-swatch-wrapper{padding:0}::file-selector-button{font:inherit}::-webkit-file-upload-button{font:inherit;-webkit-appearance:button}.form-control{display:block;width:100%;padding:.375rem .75rem;font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#fff;background-clip:padding-box;border:1px solid #ced4da;-webkit-appearance:none;-moz-appearance:none;appearance:none;border-radius:.25rem}.form-control::-webkit-date-and-time-value{height:1.5em}.form-control::-moz-placeholder{color:#6c757d;opacity:1}.form-control:-moz-read-only{background-color:#e9ecef;opacity:1}.form-control::-webkit-file-upload-button{padding:.375rem .75rem;margin:-.375rem -.75rem;-webkit-margin-end:.75rem;margin-inline-end:.75rem;color:#212529;background-color:#e9ecef;border-color:inherit;border-style:solid;border-width:0;border-inline-end-width:1px;border-radius:0}.form-control-sm{min-height:calc(1.5em + .5rem + 2px);padding:.25rem .5rem;font-size:.875rem;border-radius:.2rem}.form-control-sm::-webkit-file-upload-button{padding:.25rem .5rem;margin:-.25rem -.5rem;-webkit-margin-end:.5rem;margin-inline-end:.5rem}.form-select{display:block;width:100%;padding:.375rem 2.25rem .375rem .75rem;font-size:1rem;font-weight:400;line-height:1.5;color:#212529;background-color:#fff;background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right .75rem center;background-size:16px 12px;border:1px solid #ced4da;border-radius:.25rem;-webkit-appearance:none;-moz-appearance:none;appearance:none}.form-select:-moz-focusring{color:transparent;text-shadow:0 0 0 #212529}.form-check{display:block;min-height:1.5rem;padding-left:1.5em;margin-bottom:.125rem}.form-check .form-check-input{float:left;margin-left:-1.5em}.form-check-input{width:1em;height:1em;margin-top:.25em;vertical-align:top;background-color:#fff;background-repeat:no-repeat;background-position:center;background-size:contain;border:1px solid rgba(0,0,0,.25);-webkit-appearance:none;-moz-appearance:none;appearance:none;-webkit-print-color-adjust:exact;color-adjust:exact}.form-check-input[type=checkbox]{border-radius:.25em}.form-check-input[type=radio]{border-radius:50%}.form-check-input:checked{background-color:#0d6efd;border-color:#0d6efd}.form-check-input:checked[type=checkbox]{background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e")}.form-check-input:checked[type=radio]{background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='2' fill='%23fff'/%3e%3c/svg%3e")}.form-check-input:disabled{filter:none;opacity:.5}.form-switch{padding-left:2.5em}.form-switch .form-check-input{width:2em;margin-left:-2.5em;background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='rgba%280, 0, 0, 0.25%29'/%3e%3c/svg%3e");background-position:left center;border-radius:2em}.form-switch .form-check-input:checked{background-position:right center;background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e")}.form-check-inline{display:inline-block;margin-right:1rem}.btn{display:inline-block;font-weight:400;line-height:1.5;color:#212529;text-align:center;text-decoration:none;vertical-align:middle;background-color:transparent;border:1px solid transparent;padding:.375rem .75rem;font-size:1rem;border-radius:.25rem}.btn.disabled,.btn:disabled{opacity:.65}.btn-success{color:#fff;background-color:#28a745;border-color:#28a745}.btn-success.disabled{color:#fff;background-color:#28a745;border-color:#28a745}.btn-info{color:#fff;background-color:#4d90fe;border-color:#4d90fe}.btn-info:disabled{color:#fff;background-color:#4d90fe;border-color:#4d90fe}.btn-warning{color:#000;background-color:#ffc107;border-color:#ffc107}.btn-outline-success{color:#28a745;border-color:#28a745}.btn-sm{padding:.25rem .5rem;font-size:.875rem;border-radius:.2rem}.collapse:not(.show){display:none}@-webkit-keyframes spinner-border{to{transform:rotate(360deg)}}@keyframes spinner-border{to{transform:rotate(360deg)}}.spinner-border{display:inline-block;width:2rem;height:2rem;vertical-align:-.125em;border:.25em solid currentColor;border-right-color:transparent;border-radius:50%;-webkit-animation:.75s linear infinite spinner-border;animation:.75s linear infinite spinner-border}.spinner-border-sm{width:1rem;height:1rem;border-width:.1em}@media (prefers-reduced-motion:reduce){.spinner-border{-webkit-animation-duration:1.5s;animation-duration:1.5s}}.d-inline{display:inline!important}.d-block{display:block!important}.d-flex{display:flex!important}.d-none{display:none!important}.border{border:1px solid #dee2e6!important}.border-0{border:0!important}.w-100{width:100%!important}.flex-column{flex-direction:column!important}.flex-wrap{flex-wrap:wrap!important}.justify-content-end{justify-content:flex-end!important}.justify-content-center{justify-content:center!important}.justify-content-between{justify-content:space-between!important}.align-items-center{align-items:center!important}.align-content-center{align-content:center!important}.align-self-stretch{align-self:stretch!important}.mx-0{margin-right:0!important;margin-left:0!important}.mx-1{margin-right:.25rem!important;margin-left:.25rem!important}.my-2{margin-top:.5rem!important;margin-bottom:.5rem!important}.mt-1{margin-top:.25rem!important}.mt-2{margin-top:.5rem!important}.me-0{margin-right:0!important}.me-1{margin-right:.25rem!important}.me-auto{margin-right:auto!important}.mb-0{margin-bottom:0!important}.mb-1{margin-bottom:.25rem!important}.mb-2{margin-bottom:.5rem!important}.mb-3{margin-bottom:1rem!important}.ms-0{margin-left:0!important}.ms-2{margin-left:.5rem!important}.p-0{padding:0!important}.p-1{padding:.25rem!important}.px-2{padding-right:.5rem!important;padding-left:.5rem!important}.px-3{padding-right:1rem!important;padding-left:1rem!important}.px-4{padding-right:1.5rem!important;padding-left:1.5rem!important}.py-1{padding-top:.25rem!important;padding-bottom:.25rem!important}.pt-3{padding-top:1rem!important}.ps-0{padding-left:0!important}.ps-1{padding-left:.25rem!important}.fw-bold{font-weight:700!important}.text-center{text-align:center!important}.text-decoration-none{text-decoration:none!important}.text-secondary{color:#6c757d!important}.text-muted{color:#6c757d!important}.rounded{border-radius:.25rem!important}@media (min-width:576px){.d-sm-inline{display:inline!important}.d-sm-flex{display:flex!important}.d-sm-none{display:none!important}.justify-content-sm-end{justify-content:flex-end!important}.mx-sm-1{margin-right:.25rem!important;margin-left:.25rem!important}.mt-sm-0{margin-top:0!important}.mt-sm-2{margin-top:.5rem!important}.mb-sm-0{margin-bottom:0!important}.ms-sm-0{margin-left:0!important}.ms-sm-2{margin-left:.5rem!important}.ms-sm-3{margin-left:1rem!important}.px-sm-3{padding-right:1rem!important;padding-left:1rem!important}.py-sm-1{padding-top:.25rem!important;padding-bottom:.25rem!important}.text-sm-start{text-align:left!important}}@media (min-width:768px){.d-md-block{display:block!important}.d-md-flex{display:flex!important}}body{height:100vh;padding:0 .39rem}.footer{margin:0 -.39rem}@media (min-width:1200px){body{padding:0 .9rem}.footer{margin:0 -.9rem}}.footer,.header{flex:0 0 auto}.content{flex:1 0 auto}.logo-small{height:1.4rem}#lang>.dropdown-menu,#menu>.dropdown-menu{width:auto!important;min-width:0!important}#lang>.lang-dropdown{box-shadow:none;width:1.6rem;height:1.6rem}#lang>.lang-dropdown::after{display:none}.lang-container{width:17.5rem}.lang-item{flex:0 1 50%}.lang-current{font-weight:600!important}#lang>.dropdown-menu,#menu>.dropdown-menu{width:auto!important;min-width:0!important}#menu>#linksDropdown{display:block;width:1.6rem;height:1.6rem}#menu>a>svg>g>line{fill:none;stroke:#6c757d;stroke-linecap:round;stroke-linejoin:round;stroke-width:.12rem}.info-message-head{font-weight:600;font-size:.8rem}.info-message-body{font-size:.8rem}#logo,#navTools{flex:0 0 19%}#headerBody,#headerText{flex:0 1 100%}#siteHeader{margin:.5rem .2rem .25rem .2rem}#breadcrumb{flex:0 0 62%;justify-content:center}@media (min-width:576px){#logo,#navTools{flex:0 1 27%}#siteHeader{margin:.5rem 0 .25rem 0}#logo{order:0}#headerText{order:1;flex:0 1 46%}#navTools{order:2}#breadcrumb{order:3;flex:0 1 28%;justify-content:flex-start;padding:.3rem 0 .25rem 0}#headerBody{order:4;flex:0 1 44%;margin-right:auto}}.footer{border-top:1px solid #eee;font-size:.75rem}.dropdown{position:relative}.dropdown-menu{display:none;position:absolute;right:0;font-size:1rem;color:#212529;text-align:left;list-style:none;background-color:#fff;background-clip:padding-box;padding:.5rem 0;margin:.125rem 0 0;border:1px solid rgba(0,0,0,.15);border-radius:.25rem;z-index:1001}.dropdown-item{display:block;width:100%;padding:.25rem 1.5rem;font-weight:400;color:#212529;text-align:inherit;white-space:nowrap;background-color:transparent;border:0}a.dropdown-item{text-decoration:none}.dropdown-divider{margin:.5rem 0;overflow:hidden;border-top:1px solid rgba(0,0,0,.15)}.form-switch .form-check-input:disabled{filter:initial;opacity:initial}.message-extra-small,.message-small{border:1px solid transparent;border-radius:.25rem}.message-extra-small{padding:.75rem 1.25rem}@media (min-width:768px){.message-extra-small{font-size:.95rem;padding:.3rem .9rem}}.message-small{padding:.5rem .9rem}.message-primary{color:#004085;background-color:#cce5ff;border-color:#b8daff}.message-success{color:#155724;background-color:#d4edda;border-color:#c3e6cb}.message-warn{color:#721c24;background-color:#f8d7da;border-color:#f5c6cb}.empty-img-divider{color:#f05033;font-weight:700}.edit-section{flex:1 1 auto}#editMenu{flex:0 1 5rem}#editMenu .edit-menu-nav{background-color:rgba(0,0,0,.03);border-left:.2rem solid #0079ce;border-top:1px solid #dee2e6;border-right:1px solid #dee2e6;border-bottom:1px solid #dee2e6;margin-bottom:.15rem;line-height:1.77rem;word-break:keep-all}#editMenu .edit-menu-nav.active{border-left:.2rem solid #f05033;background-color:#eeeef1}.edit-panel-container{padding:1rem;background-color:#f7f6f5;padding-top:0!important;height:12rem}.edit-panel-container .edit-panel-group{flex:1 1 auto}.edit-panel-container .edit-panel-group .edit-panel-image{overflow:hidden;flex:1 1 auto}.status-container{flex:0 1 1rem}.operation-status{font-size:.75rem;font-weight:600;line-height:0}#editToolbox{flex:1 1 auto}#editToolbox .toolbox{flex:1 1 auto}.toolbox-nav-link{display:block;padding:.5rem 1rem}.line-height-zero{line-height:0}.image-info-table{width:100%;font-size:.85rem;border:1px solid #dee2e6;border-collapse:collapse}.image-info-table td,.image-info-table th{text-align:center;border:1px solid #dee2e6;padding:.2rem}.image-info-header{background-color:rgba(0,0,0,.03)}@media (min-width:576px){.edit-panel-container{flex:1 1 auto;height:auto;order:1}.edit-toolbox-container{flex:0 1 312px}.image-info-container{margin-top:.18rem}}.edit-status-container{margin-top:.88rem;min-height:.4rem}@media (min-width:768px){.edit-status-container{margin-bottom:-1.37rem}}.edit-error-msg{font-size:.85rem}.card-item{position:relative;display:flex;flex-direction:column;min-width:0;word-wrap:break-word;background-color:#fff;background-clip:border-box;border:1px solid rgba(0,0,0,.125);border-radius:.25rem}.card-item-header{padding:.75rem 1.1rem;margin-bottom:0;background-color:rgba(0,0,0,.03);border-bottom:1px solid rgba(0,0,0,.125)}.card-item-header:first-child{border-radius:calc(.25rem - 1px) calc(.25rem - 1px) 0 0}.card-item-body{flex:1 1 auto;padding:1.25rem 1.1rem 1.25rem}@media (min-width:768px){.card-item-body{padding-bottom:2.25rem}}.card-header-text{line-height:1.17rem;font-size:1rem}.toolbox-icon{font-size:1.25rem;font-weight:700}#ResizeTools>.card-item-body{padding-top:.3rem!important}.percentage-switch{margin-top:.2rem}.resize-row{display:flex;margin-left:-.38rem;margin-right:-.38rem}.resize-col{flex:1 0 0;padding-left:.38rem;padding-right:.38rem}.resize-percentage-input{width:6rem!important}.resize-aspect-ratio-container{margin-top:.25rem}.crop-box-options-container{margin-top:.25rem}.change-orient-btn{width:1.9rem;background-size:100% 100%}.rotate-slider{flex:1 1 100%}@media (min-width:576px){#CompressTools>.card-item-body{padding-top:.82rem!important;padding-left:.5rem!important;padding-right:.5rem!important}}.compress-size-input{width:3.9rem}.compress-result{flex:0 1 100%}.secondary-btn-left,.secondary-btn-right{flex:1 1 0}.secondary-btn-left{margin-right:.125rem}.secondary-btn-right{margin-left:.125rem}.secondary-btn{padding:.5rem .35rem}.primary-btn{flex:1 1 100%;padding-top:.5rem;padding-bottom:.5rem;margin-top:.45rem}@media (min-width:576px){.primary-btn,.secondary-btn-left,.secondary-btn-right{flex:0 1 auto}.primary-btn,.secondary-btn{padding:.25rem .5rem;font-size:.875rem;border-radius:.2rem}}.progress-container{line-height:0}span[class*=pr-an-]{height:.3rem;width:.3rem;background:#000;display:inline-block;margin:0 .125rem;border-radius:100%;-webkit-border-radius:100%;-moz-border-radius:100%;-webkit-animation:loader 4s infinite;-webkit-animation-timing-function:cubic-bezier(.03,.615,.995,.415);-webkit-animation-fill-mode:both;-moz-animation:loader 4s infinite;-moz-animation-timing-function:cubic-bezier(.03,.615,.995,.415);-moz-animation-fill-mode:both;animation:loader 4s infinite;animation-timing-function:cubic-bezier(.03,.615,.995,.415);animation-fill-mode:both}span.pr-an-1{-webkit-animation-delay:1s;animation-delay:1s;-moz-animation-delay:1s}span.pr-an-2{-webkit-animation-delay:.8s;animation-delay:.8s;-moz-animation-delay:.8s}span.pr-an-3{-webkit-animation-delay:.6s;animation-delay:.6s;-moz-animation-delay:.6s}span.pr-an-4{-webkit-animation-delay:.4s;animation-delay:.4s;-moz-animation-delay:.4s}span.pr-an-5{-webkit-animation-delay:.2s;animation-delay:.2s;-moz-animation-delay:.2s}span.pr-an-6{-webkit-animation-delay:0;animation-delay:0;-moz-animation-delay:0}@-webkit-keyframes loader{0%{-webkit-transform:translateX(-1.875rem);opacity:0}25%{opacity:1}50%{-webkit-transform:translateX(1.875rem);opacity:0}100%{opacity:0}}@-moz-keyframes loader{0%{-moz-transform:translateX(-1.875rem);opacity:0}25%{opacity:1}50%{-moz-transform:translateX(1.875rem);opacity:0}100%{opacity:0}}@keyframes loader{0%{transform:translateX(-1.875rem);opacity:0}25%{opacity:1}50%{transform:translateX(1.875rem);opacity:0}100%{opacity:0}}#breadcrumb{white-space:nowrap;overflow:hidden}#breadcrumb>ol.breadcrumb-path{font-size:.76rem}#breadcrumb>ol.breadcrumb-path li{display:inline}#breadcrumb>ol.breadcrumb-path a{text-decoration:none}@media (min-width:576px){#breadcrumb>ol.breadcrumb-path{font-size:.8rem}}#cookieConsent{flex:0 0 auto;color:#fff;background-color:#484b4d;margin:0 -.39rem}@media (min-width:1200px){#cookieConsent{margin:0 -.9rem}}#cookieConsent>div{font-size:.85rem}#cookieConsentAccept{font-size:.9rem;color:#fff;background-color:#f07c39}</style>
+
+
+	
+		<script async="" src="./Deb photo_files/js(1)"></script>
+		<script>
+			window.dataLayer = window.dataLayer || [];
+			function gtag() { dataLayer.push(arguments); }
+			gtag('js', new Date());
+			gtag('config', 'UA-124200996-1');
+		</script>
+	
+	
+
+<link rel="canonical" href="https://www.resizepixel.com/edit/">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
+	<meta name="description" content="To modify an image, apply the photo editing tools, revert to the original image or go to download page.">
+
+	
+
+
+<meta property="og:locale" content="en">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.resizepixel.com/">
+<meta property="og:title" content="ResizePixel - online image editor">
+<meta property="og:description" content="Free image editor to crop, resize, flip, rotate, convert and compress image online">
+<meta property="og:image" content="https://www.resizepixel.com/img/og-image.png">
+<meta property="og:image:alt" content="resizepixel.com">
+<meta property="og:image:width" content="1300">
+<meta property="og:image:height" content="681">
+<meta name="twitter:image" content="https://www.resizepixel.com/img/twitter-image.png">
+<meta name="twitter:image:alt" content="resizepixel.com">
+
+	
+<link rel="icon" type="image/x-icon" href="https://rp-az.azureedge.net/cdn/v166/wwwroot/favicon.ico?v=469ux0t414aG8iop8bnEX_qK7vkG0q-rDEuEYIyNbfY" onerror="this.onerror=null;this.href=&#39;/favicon.ico?v=469ux0t414aG8iop8bnEX_qK7vkG0q-rDEuEYIyNbfY&#39;;">
+<link rel="icon" type="image/png" sizes="32x32" href="https://rp-az.azureedge.net/cdn/v166/wwwroot/favicon-32x32.png?v=McDke5lW-v-nwaiomILBWQlztLCyChOCcrbX_j9bPIQ" onerror="this.onerror=null;this.href=&#39;/favicon-32x32.png?v=McDke5lW-v-nwaiomILBWQlztLCyChOCcrbX_j9bPIQ&#39;;">
+<link rel="icon" type="image/png" sizes="144x144" href="https://rp-az.azureedge.net/cdn/v166/wwwroot/android-chrome-144x144.png?v=nU3UGdBzKJzGaHv6gKZ2t5O75wcJKxf7vR1H9r1IZf4" onerror="this.onerror=null;this.href=&#39;/android-chrome-144x144.png?v=nU3UGdBzKJzGaHv6gKZ2t5O75wcJKxf7vR1H9r1IZf4&#39;;">
+<link rel="icon" type="image/png" sizes="192x192" href="https://rp-az.azureedge.net/cdn/v166/wwwroot/android-chrome-192x192.png?v=04ARPhwjiOOMmtw1WTzo4yjear7oCVxXj_0JKBhfnmQ" onerror="this.onerror=null;this.href=&#39;/android-chrome-192x192.png?v=04ARPhwjiOOMmtw1WTzo4yjear7oCVxXj_0JKBhfnmQ&#39;;">
+<link rel="icon" type="image/png" sizes="16x16" href="https://rp-az.azureedge.net/cdn/v166/wwwroot/favicon-16x16.png?v=cO7nwgHs5EiPTExrnoPFk9zxHvPjYK9J_su_NDQeZPE" onerror="this.onerror=null;this.href=&#39;/favicon-16x16.png?v=cO7nwgHs5EiPTExrnoPFk9zxHvPjYK9J_su_NDQeZPE&#39;;">
+<link rel="manifest" href="https://www.resizepixel.com/site.webmanifest?v=OXka86YnClJVCPJsfkJTeulu7e3YFAnrM5WjgjfFRso">
+<link rel="mask-icon" href="https://rp-az.azureedge.net/cdn/v166/wwwroot/safari-pinned-tab.svg?v=qFN-PZ96G22gQUtgHy76KaL6Ze1PR5gJw2nRMc6suZk" color="#5bbad5" onerror="this.onerror=null;this.href=&#39;/safari-pinned-tab.svg?v=qFN-PZ96G22gQUtgHy76KaL6Ze1PR5gJw2nRMc6suZk&#39;;">
+<link rel="apple-touch-icon" sizes="180x180" href="https://rp-az.azureedge.net/cdn/v166/wwwroot/apple-touch-icon.png?v=5jMAk89tnqI37mELtu_AZyHNGvTsF5EDmiisLIWRHXU" onerror="this.onerror=null;this.href=&#39;/apple-touch-icon.png?v=5jMAk89tnqI37mELtu_AZyHNGvTsF5EDmiisLIWRHXU&#39;;">
+<meta name="msapplication-TileColor" content="#2b5797">
+<meta name="msapplication-TileImage" content="/mstile-144x144.png?v=2">
+<meta name="theme-color" content="#ffffff">
+
+<meta http-equiv="origin-trial" content="A+cA2PUOfIOKAdSDJOW5CP9ZlxONy1yu+hqAq72zUtKw4rLdihqRp6Nui/jUyCyegr+BUtH+C+Elv0ufn05yBQEAAACFeyJvcmlnaW4iOiJodHRwczovL2RvdWJsZWNsaWNrLm5ldDo0NDMiLCJmZWF0dXJlIjoiUHJpdmFjeVNhbmRib3hBZHNBUElzIiwiZXhwaXJ5IjoxNjY5NzY2Mzk5LCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ=="><meta http-equiv="origin-trial" content="A+zsdH3aNZT/bkjT8U/o5ACzyaeNYzTvtoVmwf/KOilfv39pxY2AIsOwhQJv+YnXp98i3TqrQibIVtMWs5UHjgoAAACLeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXN5bmRpY2F0aW9uLmNvbTo0NDMiLCJmZWF0dXJlIjoiUHJpdmFjeVNhbmRib3hBZHNBUElzIiwiZXhwaXJ5IjoxNjY5NzY2Mzk5LCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ=="><meta http-equiv="origin-trial" content="AxceVEhIegcDEHqLXFQ2+vPKqzCppoJYsRCZ/BdfVnbM/sUUF2BXV8lwNosyYjvoxnTh2FC8cOlAnA5uULr/zAUAAACLeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXRhZ3NlcnZpY2VzLmNvbTo0NDMiLCJmZWF0dXJlIjoiUHJpdmFjeVNhbmRib3hBZHNBUElzIiwiZXhwaXJ5IjoxNjY5NzY2Mzk5LCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ=="><link rel="preload" href="./Deb photo_files/f(3).txt" as="script"><script type="text/javascript" src="./Deb photo_files/f(3).txt"></script><link rel="preload" href="./Deb photo_files/f(4).txt" as="script"><script type="text/javascript" src="./Deb photo_files/f(4).txt"></script><script async="" src="./Deb photo_files/ca-pub-7918179406245625"></script><script async="" src="./Deb photo_files/AGSKWxXwr9XmOZZ8rnBT5zd67HoAmzQBR5l1ji-o6_JOC3UBeJDvDBc81NWXkkjZdLqzGQc-5CEFxZY4YyepO_y7cRg="></script><script async="" src="./Deb photo_files/AGSKWxVuKEFv5wA2Zi1kgcyLVKbWV1Bc_96P7Lr5OBblHa0OMyuRP_R_e_WQEsJWZ_UngMTawKPZTD7FZBNEdFYM_x5-NFs3bPcA0euSs3Ou9v4QXSWu5C1j0rwWuo7qAobzVtfoP4Md5A=="></script><script async="" src="./Deb photo_files/AGSKWxVeId0_G3KMxdu_W5sQKlB23MhPgxha3NVcv2qbKzHLeaceq_F445Ly7Q2fxJl_09-I0fxN4Tq1LG3pvarj8tDqnuPYK2JTnruI9tdgDg8dc4Q2VHkS7p_Irq1L_90FL66vbF4Row=="></script></head>
+<body class="d-flex flex-column">
+	<nav id="siteHeader" class="header d-flex flex-wrap justify-content-between">
+        
+		    
+	<div id="logo">
+		<a href="https://www.resizepixel.com/">
+				
+
+
+
+
+		<img src="./Deb photo_files/logo-large.svg" alt="ResizePixel logo" class="logo-small d-none d-sm-inline" onerror="this.onerror=null;this.src=&#39;/img/logo-large.svg?v=T8drmMLQFfAhT6v0WTe-ap1HA2RIvg-SvJk3nsffet8&#39;;">
+
+				
+
+
+	<img src="./Deb photo_files/logo-small.svg" alt="ResizePixel small logo" class="logo-small d-inline d-sm-none" onerror="this.onerror=null;this.src=&#39;/img/logo-small.svg?v=ENkEVDgpyjfnItRGMuIiAvKLZAtVf5dxy5Ak_1oCM9M&#39;;">
+
+		</a>
+	</div>
+
+		    
+
+	<div id="breadcrumb" class="d-flex">
+		<ol itemscope="" itemtype="https://schema.org/BreadcrumbList" class="breadcrumb-path text-muted mb-0 ps-0">
+				<li itemscope="" itemprop="itemListElement" itemtype="https://schema.org/ListItem">
+					<a itemprop="item" href="https://www.resizepixel.com/">
+						<span itemprop="name">Home</span>
+					</a>
+					<meta itemprop="position" content="1">
+					/
+				</li>
+			<li>
+				Edit
+			</li>
+		</ol>
+	</div>
+
+		    
+
+			<div id="navTools" class="d-flex justify-content-end align-items-center">
+				
+
+<div id="lang" class="dropdown">
+	<button id="langDropdown" class="btn btn-sm text-muted p-0 d-block dropdown-toggle lang-dropdown lang-current" type="button" title="Change language" aria-label="Change language" aria-haspopup="true">
+		EN
+	</button>
+	<div role="navigation" class="dropdown-menu" aria-labelledby="langDropdown">
+		<div class="d-flex flex-wrap lang-container">
+                <a class="lang-current lang-item dropdown-item me-auto px-3" href="https://www.resizepixel.com/?chlang=en">✓ English</a>
+                <a class="lang-item dropdown-item me-auto px-3" href="https://www.resizepixel.com/es?chlang=es">Español</a>
+                <a class="lang-item dropdown-item me-auto px-3" href="https://www.resizepixel.com/pt?chlang=pt">Português</a>
+                <a class="lang-item dropdown-item me-auto px-3" href="https://www.resizepixel.com/fr?chlang=fr">Français</a>
+                <a class="lang-item dropdown-item me-auto px-3" href="https://www.resizepixel.com/de?chlang=de">Deutsch</a>
+                <a class="lang-item dropdown-item me-auto px-3" href="https://www.resizepixel.com/it?chlang=it">Italiano</a>
+                <a class="lang-item dropdown-item me-auto px-3" href="https://www.resizepixel.com/ja?chlang=ja">日本語</a>
+                <a class="lang-item dropdown-item me-auto px-3" href="https://www.resizepixel.com/ko?chlang=ko">한국어</a>
+                <a class="lang-item dropdown-item me-auto px-3" href="https://www.resizepixel.com/ru?chlang=ru">Русский</a>
+                <a class="lang-item dropdown-item me-auto px-3" href="https://www.resizepixel.com/uk?chlang=uk">Українська</a>
+                <a class="lang-item dropdown-item me-auto px-3" href="https://www.resizepixel.com/tr?chlang=tr">Türkçe</a>
+                <a class="lang-item dropdown-item me-auto px-3" href="https://www.resizepixel.com/pl?chlang=pl">Polski</a>
+                <a class="lang-item dropdown-item me-auto px-3" href="https://www.resizepixel.com/nl?chlang=nl">Dutch</a>
+                <a class="lang-item dropdown-item me-auto px-3" href="https://www.resizepixel.com/no?chlang=no">Norsk</a>
+		</div>
+	</div>
+</div>
+				<div id="menu" class="dropdown">
+	<a href="https://www.resizepixel.com/edit#" id="linksDropdown" role="button" class="dropdown-toggle" aria-label="Menu" aria-haspopup="true">
+		<svg viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve">
+			<g>
+				<line x1="4" x2="20" y1="4" y2="4"></line>
+				<line x1="4" x2="20" y1="11" y2="11"></line>
+				<line x1="4" x2="20" y1="18" y2="18"></line>
+			</g>
+		</svg>
+	</a>
+	<div class="dropdown-menu" role="menu" aria-labelledby="linksDropdown">
+		<a class="dropdown-item" href="https://www.resizepixel.com/resize-image">Resize Image</a>
+		<a class="dropdown-item" href="https://www.resizepixel.com/crop-image">Crop Image</a>
+		<a class="dropdown-item" href="https://www.resizepixel.com/mirror-image">Mirror Image</a>
+		<a class="dropdown-item" href="https://www.resizepixel.com/rotate-image">Rotate Image</a>
+		<a class="dropdown-item" href="https://www.resizepixel.com/compress-image">Compress Image</a>
+		<a class="dropdown-item" href="https://www.resizepixel.com/reduce-image-in-kb">Reduce Image in KB</a>
+		<a class="dropdown-item" href="https://www.resizepixel.com/convert-image">Convert Image</a>
+		<hr class="dropdown-divider">
+		<a class="dropdown-item" href="https://www.resizepixel.com/terms">Terms</a>
+		<a class="dropdown-item" href="https://www.resizepixel.com/privacy">Privacy</a>
+		<a class="dropdown-item" href="https://www.resizepixel.com/contact">Contact</a>
+	</div>		
+</div>
+			</div>
+		
+		
+	
+<div id="headerText" class="d-flex justify-content-center align-items-center">
+	<h1 class="text-secondary text-center info-message-head mb-0">Modify and preview the image</h1>
+</div>
+
+		
+	
+	<div id="headerBody" class="d-flex justify-content-center align-items-center">
+		<span class="text-center text-secondary info-message-body">
+			ⓘ&nbsp;The preview displays a scaled image
+		</span>
+	</div>
+
+
+	</nav><ins class="adsbygoogle adsbygoogle-noablate" data-adsbygoogle-status="done" style="display: none !important;" data-ad-status="unfilled"><div id="aswift_0_host" tabindex="0" title="Advertisement" aria-label="Advertisement" style="border: none; height: 0px; width: 0px; margin: 0px; padding: 0px; position: relative; visibility: visible; background-color: transparent; display: inline-block;"><iframe id="aswift_0" name="aswift_0" style="left:0;position:absolute;top:0;border:0;width:undefinedpx;height:undefinedpx;" sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation" frameborder="0" marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" src="./Deb photo_files/ads.html" data-google-container-id="a!1" data-load-complete="true"></iframe></div></ins>
+	<main class="d-flex flex-column justify-content-between content">
+		
+
+
+
+
+
+
+
+
+
+
+
+<span id="editErrorMessage" class="edit-error-msg message-small message-warn text-center d-none"></span>
+<input type="hidden" id="hasImageHdn" value="true">
+	<input type="hidden" id="maxSizeHdn" value="65500">
+	<input type="hidden" id="maxResolutionHdn" value="250000000">
+	<input type="hidden" id="widthHdn" value="270">
+	<input type="hidden" id="heightHdn" value="331">
+	<input type="hidden" id="wToHRatioHdn" value="0.816">
+<input type="hidden" id="cultureHdn" value="en">
+
+
+
+
+
+
+<div class="d-flex d-sm-none justify-content-center align-items-center" style="margin: 0.1rem -0.39rem 0.5rem -0.39rem;">
+	
+	
+		<!-- EditMobileBanner -->
+		<ins class="adsbygoogle d-block d-sm-none" style="min-width:290px;max-width:575px;width:100%;height:100px;" data-ad-client="ca-pub-7918179406245625" data-ad-slot="2237211258" data-adsbygoogle-status="done"><!--No ad requested because of display:none on the adsbygoogle tag--></ins>
+		<script>
+			(adsbygoogle = window.adsbygoogle || []).push({});
+		</script>
+	
+</div>
+
+<div class="d-sm-flex edit-section">
+	<nav id="editMenu" class="d-none d-sm-flex flex-column">
+			<a id="ResizeNav" class="active toolbox-nav-link edit-menu-nav fw-bold text-decoration-none rounded" href="https://www.resizepixel.com/edit#ResizeTools" aria-expanded="true" aria-controls="ResizeTools">
+				Resize
+			</a>
+			<a id="CropNav" class="toolbox-nav-link edit-menu-nav fw-bold text-decoration-none rounded" href="https://www.resizepixel.com/edit#CropTools" aria-expanded="false" aria-controls="CropTools">
+				Crop
+			</a>
+			<a id="MirrorNav" class="toolbox-nav-link edit-menu-nav fw-bold text-decoration-none rounded" href="https://www.resizepixel.com/edit#MirrorTools" aria-expanded="false" aria-controls="MirrorTools">
+				Mirror
+			</a>
+			<a id="RotateNav" class="toolbox-nav-link edit-menu-nav fw-bold text-decoration-none rounded" href="https://www.resizepixel.com/edit#RotateTools" aria-expanded="false" aria-controls="RotateTools">
+				Rotate
+			</a>
+			<a id="CompressNav" class="toolbox-nav-link edit-menu-nav fw-bold text-decoration-none rounded" href="https://www.resizepixel.com/edit#CompressTools" aria-expanded="false" aria-controls="CompressTools">
+				Compress
+			</a>
+			<a id="ConvertNav" class="toolbox-nav-link edit-menu-nav fw-bold text-decoration-none rounded" href="https://www.resizepixel.com/edit#ConvertTools" aria-expanded="false" aria-controls="ConvertTools">
+				Convert
+			</a>
+	</nav>
+	<section class="edit-panel-container d-flex flex-column justify-content-center align-items-center border rounded mb-1 mb-sm-0">
+			<div class="edit-panel-group d-flex flex-column align-items-center align-self-stretch">
+				<div class="d-flex status-container">
+					
+<div id="operationProgress" class="align-items-center progress-container d-none">
+	<span class="pr-an-1"></span>
+	<span class="pr-an-2"></span>
+	<span class="pr-an-3"></span>
+	<span class="pr-an-4"></span>
+	<span class="pr-an-5"></span>
+	<span class="pr-an-6"></span>
+</div>
+					<div id="operationStatus" class="d-none align-items-center operation-status"></div>
+				</div>
+				<div class="edit-panel-image d-flex justify-content-center align-items-center align-self-stretch">
+					<img id="editPanel" class="" src="./Deb photo_files/WhatsApp Image 2022-08-29 at 9.3.jpg" alt="Preview image" height="331">
+				</div>
+			</div>
+	</section>
+	<div class="d-flex flex-column edit-toolbox-container mx-0 mx-sm-1">
+		<div id="editToolbox" class="d-flex flex-column" role="tablist">
+				<section class="card-item toolbox mb-1 mb-sm-0">
+					<div class="card-item-header toolbox-header" role="tab" id="ResizeToolsHeader" aria-expanded="true" aria-controls="ResizeTools">
+						<span class="d-block card-header-text fw-bold text-center text-sm-start text-muted">
+							Resize Image
+						</span>
+					</div>
+					<div id="ResizeTools" class="collapse show toolbox-panel" role="tabpanel" aria-labelledby="ResizeNav ResizeToolsHeader" data-bs-parent="#editToolbox" data-toolboxid="Resize">
+						<div class="card-item-body">
+							
+
+
+
+<div class="d-flex justify-content-end percentage-switch">
+	<label for="percentageCheckbox" class="form-check-label me-1">%</label>
+	<div class="form-check form-switch ps-0 mb-0">
+		<input id="percentageCheckbox" type="checkbox" class="form-check-input ms-0">
+	</div>
+</div>
+<div id="pixelResizeDiv" class="mb-3">
+	<div class="resize-row">
+		<div class="resize-col">
+			<label for="resizeWidthInput" class="mb-2">Width</label>
+			<input type="number" id="resizeWidthInput" min="1" max="65500" value="930" class="form-control" autocomplete="off">
+		</div>
+		<div class="resize-col">
+			<label for="resizeHeightInput" class="mb-2">Height</label>
+			<input type="number" id="resizeHeightInput" min="1" max="65500" value="1140" class="form-control" autocomplete="off">
+		</div>
+	</div>
+	<div class="form-check resize-aspect-ratio-container">
+		<input type="checkbox" id="resizeAspectRatioCheckbox" checked="" class="form-check-input">
+		<label class="form-check-label" for="resizeAspectRatioCheckbox">Fixed aspect ratio</label>
+	</div>
+</div>
+<div id="percentageResizeDiv" class="d-flex flex-wrap align-items-center mt-1 mb-3 d-none">
+	<input type="number" id="resizePercentageInput" min="1" value="" class="resize-percentage-input form-control" autocomplete="off">&nbsp;<label for="resizePercentageInput">% of the current size</label>
+</div>
+<div class="d-flex justify-content-center">
+	<button id="resizeImageBtn" class="btn btn-info operation-trigger px-4">
+		<span class="spinner-border spinner-border-sm operation-progress d-none" role="status" aria-hidden="true"></span>
+		Resize
+	</button>
+</div>
+<div id="resizeStatus" class="edit-status-container d-none justify-content-center"></div>
+						</div>
+							
+
+<div class="d-flex d-sm-none flex-column justify-content-end align-items-center mx-1 my-2" style="flex:1 1 auto;">
+	
+	
+		<!-- EditMobileResizeBanner -->
+		<ins class="adsbygoogle d-flex d-sm-none" style="min-width:290px;max-width:552px;width:100%;height:250px;" data-ad-client="ca-pub-7918179406245625" data-ad-slot="8795538565" data-adsbygoogle-status="done"><!--No ad requested because of display:none on the adsbygoogle tag--></ins>
+		<script>
+			(adsbygoogle = window.adsbygoogle || []).push({});
+		</script>
+	
+</div>
+
+					</div>
+						
+
+<div class="d-none d-md-flex flex-column justify-content-end align-items-center" style="flex:1 1 auto;margin:0 4px 4px;">
+	
+	
+		<!-- EditResizeBanner -->
+		<ins class="adsbygoogle d-none d-md-block" style="min-width: 200px; max-width: 300px; width: 300px; height: 250px;" data-ad-client="ca-pub-7918179406245625" data-ad-slot="7331433870" data-adsbygoogle-status="done" data-ad-status="filled"><div id="aswift_1_host" tabindex="0" title="Advertisement" aria-label="Advertisement" style="border: none; height: 250px; width: 300px; margin: 0px; padding: 0px; position: relative; visibility: visible; background-color: transparent; display: inline-block;"><iframe id="aswift_1" name="aswift_1" style="left:0;position:absolute;top:0;border:0;width:300px;height:250px;" sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-top-navigation-by-user-activation" width="300" height="250" frameborder="0" marginwidth="0" marginheight="0" vspace="0" hspace="0" allowtransparency="true" scrolling="no" src="./Deb photo_files/ads(1).html" data-google-container-id="a!2" data-google-query-id="COLepfqw7PkCFQi5aAodtp8C8g" data-load-complete="true"></iframe></div></ins>
+		<script>
+			(adsbygoogle = window.adsbygoogle || []).push({});
+		</script>
+	
+</div>
+
+				</section>
+				<section class="card-item d-block d-sm-none toolbox mb-1 mb-sm-0">
+					<div class="card-item-header toolbox-header" role="tab" id="CropToolsHeader" aria-expanded="false" aria-controls="CropTools">
+						<span class="d-block card-header-text fw-bold text-center text-sm-start text-muted">
+							Crop Image
+						</span>
+					</div>
+					<div id="CropTools" class="collapse toolbox-panel" role="tabpanel" aria-labelledby="CropNav CropToolsHeader" data-bs-parent="#editToolbox" data-toolboxid="Crop">
+						<div class="card-item-body">
+							
+
+
+<div class="mb-3">
+	<label for="aspectRatioSelect" class="mb-2">Aspect ratio</label>
+	<div class="d-flex">
+		<select id="aspectRatioSelect" class="form-select">
+			<option value="Custom">Custom</option>
+			<option value="Original">Original</option>
+			<option value="1x1">Photo 1x1</option>
+			<option value="2x1">Photo 2x1</option>
+			<option value="3x2">Photo 3x2</option>
+			<option value="4x3">Photo 4x3</option>
+			<option value="5x3">Photo 5x3</option>
+			<option value="8x5">Photo 8x5</option>
+			<option value="16x9xf">Photo 16x9</option>
+			<option value="1.618x1">Golden Ratio</option>
+			<option value="9x16">Instagram Story</option>
+			<option value="2x3xp">Pinterest Pin</option>
+			<option value="2x3xt">Tumblr Post</option>
+			<option value="2.628x1">Facebook Cover</option>
+			<option value="3x1">Twitter Header</option>
+			<option value="4x1">LinkedIn Background</option>
+			<option value="16x9xy">YouTube Cover</option>
+		</select>
+		<button id="btnCropOrient" title="Change orientation" class="btn border-0 ms-2 change-orient-btn change-orient-btn-background d-none"></button>
+	</div>
+	<div class="crop-box-options-container">
+		<input type="checkbox" id="cropBoxCheckbox" class="form-check-input" autocomplete="off" checked="">
+		<label class="form-check-label" for="cropBoxCheckbox">Display grid</label>
+	</div>
+</div>
+<div class="d-flex justify-content-center">
+	<button id="cropImageBtn" class="btn btn-info operation-trigger px-4">
+		<span class="d-none spinner-border spinner-border-sm operation-progress" role="status" aria-hidden="true"></span>
+		Crop
+	</button>
+</div>
+<div id="cropStatus" class="edit-status-container d-none justify-content-center">
+</div>
+						</div>
+					</div>
+				</section>
+				<section class="card-item d-block d-sm-none toolbox mb-1 mb-sm-0">
+					<div class="card-item-header toolbox-header" role="tab" id="MirrorToolsHeader" aria-expanded="false" aria-controls="MirrorTools">
+						<span class="d-block card-header-text fw-bold text-center text-sm-start text-muted">
+							Mirror Image
+						</span>
+					</div>
+					<div id="MirrorTools" class="collapse toolbox-panel" role="tabpanel" aria-labelledby="MirrorNav MirrorToolsHeader" data-bs-parent="#editToolbox" data-toolboxid="Mirror">
+						<div class="card-item-body">
+							
+<div class="d-flex justify-content-between mt-1 mb-3">
+	<div class="form-check form-check-inline me-0 mb-2">
+		<label for="mirrorHorizontalInput">
+			<span class="toolbox-icon line-height-zero">⇄</span>
+			<input type="radio" id="mirrorHorizontalInput" name="mirrorDirection" value="horizontal" checked="" class="form-check-input">
+			Horizontally
+		</label>
+	</div>
+	<div class="form-check form-check-inline me-0 mb-2">
+		<label for="mirrorVerticalInput">
+			<span class="toolbox-icon line-height-zero">⇅</span>
+			<input type="radio" id="mirrorVerticalInput" name="mirrorDirection" value="vertical" class="form-check-input">
+			Vertically
+		</label>
+	</div>
+</div>
+<div class="d-flex justify-content-center">
+	<button id="mirrorImageBtn" class="btn btn-info operation-trigger px-4">
+		<span class="d-none spinner-border spinner-border-sm operation-progress" role="status" aria-hidden="true"></span>
+		Mirror
+	</button>
+</div>
+<div id="mirrorStatus" class="edit-status-container d-none justify-content-center">
+</div>
+						</div>
+					</div>
+				</section>
+				<section class="card-item d-block d-sm-none toolbox mb-1 mb-sm-0">
+					<div class="card-item-header toolbox-header" role="tab" id="RotateToolsHeader" aria-expanded="false" aria-controls="RotateTools">
+						<span class="d-block card-header-text fw-bold text-center text-sm-start text-muted">
+							Rotate Image
+						</span>
+					</div>
+					<div id="RotateTools" class="collapse toolbox-panel" role="tabpanel" aria-labelledby="RotateNav RotateToolsHeader" data-bs-parent="#editToolbox" data-toolboxid="Rotate">
+						<div class="card-item-body">
+							
+<div class="d-flex flex-wrap justify-content-between mt-1 mb-3">
+	<div class="form-check form-check-inline me-0">
+		<label for="rotateCCWInput">
+			<span class="toolbox-icon line-height-zero">↺</span>
+			<input type="radio" id="rotateCCWInput" name="rotateDirection" value="CCW" checked="" class="form-check-input">
+			Left
+		</label>
+	</div>
+	<span id="rotateAngleLabel">90°</span>
+	<div class="form-check form-check-inline me-0">
+		<label for="rotateCWInput">
+			<span class="toolbox-icon line-height-zero">↻</span>
+			<input type="radio" id="rotateCWInput" name="rotateDirection" value="CW" class="form-check-input">
+			Right
+		</label>
+	</div>
+	<div class="mt-2 rotate-slider">
+		<input type="range" class="w-100" id="rotateAngleInput" min="-180" max="180" autocomplete="off">
+	</div>
+	<div class="mt-1 mb-0">
+		<input type="checkbox" id="enlargeBackgroundCheckbox" checked="" class="form-check-input">
+		<label class="form-check-label" for="enlargeBackgroundCheckbox">Enlarge image background</label>
+	</div>
+</div>
+<div class="d-flex justify-content-center">
+	<button id="rotateImageBtn" class="btn btn-info operation-trigger px-4">
+		<span class="d-none spinner-border spinner-border-sm operation-progress" role="status" aria-hidden="true"></span>
+		Rotate
+	</button>
+</div>
+<div id="rotateStatus" class="edit-status-container d-none justify-content-center">
+</div>
+						</div>
+					</div>
+				</section>
+				<section class="card-item d-block d-sm-none toolbox mb-1 mb-sm-0">
+					<div class="card-item-header toolbox-header" role="tab" id="CompressToolsHeader" aria-expanded="false" aria-controls="CompressTools">
+						<span class="d-block card-header-text fw-bold text-center text-sm-start text-muted">
+							Compress Image
+						</span>
+					</div>
+					<div id="CompressTools" class="collapse toolbox-panel" role="tabpanel" aria-labelledby="CompressNav CompressToolsHeader" data-bs-parent="#editToolbox" data-toolboxid="Compress">
+						<div class="card-item-body">
+							
+
+
+
+<div id="compressToolbox" class="mb-3">
+	<div id="compressUnavailableMsg" class="d-none message-extra-small message-primary mb-2">
+		This function is only available for JPG, PNG and GIF images
+	</div>
+	<div id="compressResultTemplate" class="d-none flex-column align-items-center message-extra-small message-success compress-result">
+		<span class="compress-result-msg text-center"></span>
+		<div><span class="size-before-label"></span> ➜ <span class="size-after-label"></span></div>
+	</div>
+	<div>
+		<label class="mb-2">Select compression method:</label>
+	</div>
+	<div class="form-check mb-0">
+		<label for="compressAutoInput" class="mb-2">
+			<input type="radio" id="compressAutoInput" name="compressionType" value="auto" class="form-check-input" checked="">
+			Auto (keep the quality)
+		</label>
+	</div>
+	<div class="form-check">
+		<label for="compressToSizeInput">
+			<input type="radio" id="compressToSizeInput" name="compressionType" value="size" class="form-check-input">
+			Compress file to
+		</label>
+		<input type="number" id="compressSizeInput" min="1" value="" autocomplete="off" class="form-control-sm compress-size-input">
+		<select id="compressUnitSelect" autocomplete="off" class="form-control-sm">
+			<option value="KB" selected="">KB</option>
+			<option value="MB">MB</option>
+		</select>
+	</div>
+</div>
+<div class="d-flex justify-content-center">
+	<button id="compressImageBtn" class="btn btn-info operation-trigger px-4">
+		<span class="d-none spinner-border spinner-border-sm operation-progress" role="status" aria-hidden="true"></span>
+		Compress
+	</button>
+</div>
+<div id="compressStatus" class="edit-status-container d-none justify-content-center">
+</div>
+						</div>
+					</div>
+				</section>
+				<section class="card-item d-block d-sm-none toolbox mb-1 mb-sm-0">
+					<div class="card-item-header toolbox-header" role="tab" id="ConvertToolsHeader" aria-expanded="false" aria-controls="ConvertTools">
+						<span class="d-block card-header-text fw-bold text-center text-sm-start text-muted">
+							Convert Image
+						</span>
+					</div>
+					<div id="ConvertTools" class="collapse toolbox-panel" role="tabpanel" aria-labelledby="ConvertNav ConvertToolsHeader" data-bs-parent="#editToolbox" data-toolboxid="Convert">
+						<div class="card-item-body">
+							
+
+
+
+<div class="d-flex align-items-center mb-3">
+	<label for="convertImageSelect" class="me-1">Format</label>
+	<select id="convertImageSelect" class="form-select ms-2 me-1">
+		<option selected="" value="png">PNG</option>
+		<option value="jpg">JPG</option>
+		<option value="webp">WEBP</option>
+		<option value="tiff">TIFF</option>
+		<option value="gif">GIF</option>
+	</select>
+</div>
+<div class="d-flex justify-content-center">
+	<button id="convertImageBtn" class="btn btn-info operation-trigger px-4">
+		<span class="d-none spinner-border spinner-border-sm operation-progress" role="status" aria-hidden="true"></span>
+		Convert
+	</button>
+</div>
+<div id="convertStatus" class="edit-status-container d-none justify-content-center">
+</div>
+						</div>
+					</div>
+				</section>
+		</div>
+			
+
+<section class="image-info-container d-none d-sm-flex card-item">
+	<table id="imageInfo" class="image-info-table mb-0 text-muted">
+		<tbody>
+			<tr>
+				<th scope="row" class="image-info-header">Current</th>
+				<td id="currentImageDimension">270 x 331</td>
+				<td id="currentImageWeight">5.16 KB</td>
+				<td id="currentImageFormat">JPG</td>
+			</tr>
+			<tr>
+				<th scope="row" class="image-info-header">Original</th>
+				<td id="originalImageDimension">930 x 1140</td>
+				<td id="originalImageWeight">43.17 KB</td>
+				<td id="originalImageFormat">JPG</td>
+			</tr>
+		</tbody>
+	</table>
+</section>
+	</div>
+</div>
+<section class="d-flex flex-wrap justify-content-sm-end mt-1 mt-sm-2 mb-2 py-sm-1">
+	<a id="uploadNewBtn" class="ms-sm-0 btn secondary-btn secondary-btn-left btn-outline-success" aria-disabled="false" role="button" href="https://www.resizepixel.com/?new=true">Upload New</a>
+	<a id="revertBtn" class="ms-sm-2 btn secondary-btn secondary-btn-right btn-outline-success" aria-disabled="false" role="button" href="https://www.resizepixel.com/edit?revert=true">Discard Changes</a>
+	<a id="downloadBtn" class="mt-sm-0 ms-sm-2 btn primary-btn btn-success" aria-disabled="false" role="button" href="https://www.resizepixel.com/download">Go to Download</a>
+</section>
+	</main>
+	
+
+	<div id="cookieConsent" role="alert" class="d-flex justify-content-between align-content-center align-items-center px-2 px-sm-3 py-1 py-sm-1">
+		<div class="align-content-center">
+			This website uses cookies to ensure the best user experience. By continuing to browse the website you agree to use of cookies.
+		</div>
+		<button id="cookieConsentAccept" type="button" class="btn btn-sm btn-warning ms-2 ms-sm-3" data-cookie-string="_consent=yes; expires=Tue, 29 Aug 2023 15:38:46 GMT; path=/; secure; samesite=none">
+			Close
+		</button>
+	</div>
+
+	<footer class="d-flex p-1 footer d-sm-none">
+		<span class="ps-1 text-muted">© 2022 ResizePixel</span>
+	</footer>
+	
+	
+
+
+<script>var cdnConfig={"useCdn":true,"cdnPrefix":"https://rp-az.azureedge.net/cdn/v166/wwwroot"}</script>
+
+
+	
+	
+         
+         
+			
+<script>var scriptConfig={"basePath":"/js/pages/edit/operations/","version":"1","scripts":[{"id":"Resize","path":"resize.min.js","fallbackObj":"window.ResizeFallback"},{"id":"Compress","path":"compress.min.js","fallbackObj":"window.CompressFallback"},{"id":"Crop","path":"crop.min.js","fallbackObj":"window.CropFallback"},{"id":"Convert","path":"convert.min.js","fallbackObj":"window.ConvertFallback"},{"id":"Mirror","path":"mirror.min.js","fallbackObj":"window.MirrorFallback"},{"id":"Rotate","path":"rotate.min.js","fallbackObj":"window.RotateFallback"}]}</script>
+		
+		
+		
+			<script src="./Deb photo_files/vendor-app.min.js.download" crossorigin="anonymous">
+			</script>
+<script>(window.EditVendorAppFallback||document.write("\u003Cscript src=\u0022/js/pages/edit/vendor-app.min.js?v=Jo5uiXt5nnMmh-LOpQPTqQhrDyl4qtgcI_dSC4ObEG8\u0022 crossorigin=\u0022anonymous\u0022\u003E\u003C/script\u003E"));</script>
+		
+	
+
+	
+	
+<script>var languageTranslate={"Error_ServiceUnavailable":"The server is temporarily unavailable. Please try again.","Edit_Error_ResizeSizeTooLarge":"The size you have entered is too large. Decrease the size by {0}% and try again.","Edit_CropAreaInfo":"{0} x {1}","Edit_CompressToolbox_CompressResultInPercents":"Your file is reduced by {0}"}</script>
+
+	
+	
+		
+		
+			<link rel="stylesheet" href="./Deb photo_files/app.min.css" onerror="this.onerror=null;this.href=&#39;/css/pages/edit/app.min.css?v=IfJbtgzRcIkBTG4pcHSlEOeHIiCZPIG2ShV5X_WaD7E&#39;;this.media=&#39;all&#39;;" media="all" onload="this.media=&#39;all&#39;">
+		
+	
+
+
+<iframe name="googlefcPresent" style="display: none; width: 0px; height: 0px; border: none; z-index: -1000; left: -1000px; top: -1000px;" src="./Deb photo_files/saved_resource.html"></iframe><iframe name="__uspapiLocator" src="./Deb photo_files/saved_resource(1).html" style="display: none; width: 0px; height: 0px; border: none; z-index: -1000; left: -1000px; top: -1000px;"></iframe><iframe name="googlefcInactive" src="./Deb photo_files/saved_resource(2).html" style="display: none; width: 0px; height: 0px; border: none; z-index: -1000; left: -1000px; top: -1000px;"></iframe><iframe name="googlefcLoaded" src="./Deb photo_files/saved_resource(3).html" style="display: none; width: 0px; height: 0px; border: none; z-index: -1000; left: -1000px; top: -1000px;"></iframe><script crossorigin="anonymous" src="./Deb photo_files/resize.min.js.download"></script><iframe src="./Deb photo_files/aframe.html" width="0" height="0" style="display: none;"></iframe></body><iframe id="google_esf" name="google_esf" src="./Deb photo_files/zrt_lookup.html" style="display: none;"></iframe></html>
