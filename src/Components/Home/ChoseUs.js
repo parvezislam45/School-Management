@@ -13,7 +13,7 @@ const ChoseUs = () => {
                     <div className='container mx-auto grid grid-cols-1 md:grid-cols-2 gap-3 mt-6 gap-y-6'>
                     <div class="card card-compact w-72">
                             <div class="hero-content flex-col lg:flex-row justify-end items-end">
-                                <img src=" https://i.ibb.co/dJrFYcJ/graduate.png" alt='david' className='w-24' />
+                                <img src="https://i.postimg.cc/GhNNyFwt/Screenshot-2023-01-29-221821.jpg" alt='david' className='w-24' />
                                 <div>
                                     <div class="flex flex-col justify-center items-center">
                                     <dt class=" text-5xl font-extrabold text-white">97%</dt>
@@ -25,7 +25,7 @@ const ChoseUs = () => {
                         </div>
                         <div class="card card-compact w-72">
                             <div class="hero-content flex-col lg:flex-row justify-end items-end">
-                                <img src="https://i.ibb.co/KwV4R56/certified.png" alt='david' className='w-24' />
+                                <img src="https://i.postimg.cc/SsfRXQnQ/Screenshot-2023-01-29-221845.jpg" alt='david' className='w-24' />
                                 <div>
                                     <div class="flex flex-col justify-center items-center">
                                     <dt class="mt-4 text-5xl font-extrabold text-white">50+</dt>
@@ -36,7 +36,7 @@ const ChoseUs = () => {
                         </div>
                         <div class="card card-compact w-72">
                             <div class="hero-content flex-col lg:flex-row justify-end items-end">
-                                <img src="https://i.ibb.co/9pL3cxw/student.png" alt='david' className='w-24' />
+                                <img src="https://i.postimg.cc/Fs8rHkTg/Screenshot-2023-01-29-221903.jpg" alt='david' className='w-24' />
                                 <div>
                                     <div class="flex flex-col justify-center items-center">
                                        
@@ -48,7 +48,7 @@ const ChoseUs = () => {
                         </div>
                         <div class="card card-compact w-72">
                             <div class="hero-content flex-col lg:flex-row justify-end items-end">
-                                <img src="https://i.ibb.co/VvmTPDL/campus.png"  alt='david' className='w-24' />
+                                <img src="https://i.postimg.cc/Gp7r6BTy/Screenshot-2023-01-29-221921.jpg"  alt='david' className='w-24' />
                                 <div>
                                     <div class="flex flex-col justify-center items-center">
                                         <dt class="mt-4 text-5xl font-extrabold text-white">10</dt>

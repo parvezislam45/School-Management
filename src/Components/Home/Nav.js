@@ -27,9 +27,6 @@ const Nav = () => {
                             <Link to='/blog'className='block py-2 pr-4 pl-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 dark:text-white' aria-current="page">Blog</Link>
                         </li>
                         <li>
-                            <Link to='/page'className='block py-2 pr-4 pl-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 dark:text-white' aria-current="page">Pages</Link>
-                        </li>
-                        <li>
                             <Link to='/contract'className='block py-2 pr-4 pl-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 dark:text-white' aria-current="page">Contract Us</Link>
                         </li>
                         </ul>
@@ -52,9 +49,6 @@ const Nav = () => {
                         </li>
                         <li>
                             <Link to='/blog'className='block py-2 pr-4 pl-3 text-white rounded md:bg-transparent md:p-0 dark:text-white' aria-current="page">Blog</Link>
-                        </li>
-                        <li>
-                            <Link to='/page'className='block py-2 pr-4 pl-3 text-white rounded md:bg-transparent md:p-0 dark:text-white' aria-current="page">Pages</Link>
                         </li>
                         <li>
                             <Link to='/contract'className='block py-2 pr-4 pl-3 text-white rounded md:bg-transparent md:p-0 dark:text-white' aria-current="page">Contract Us</Link>

@@ -25,18 +25,7 @@ let slides = [
             </h2>
         </div>
     </div>,
-    <div class="max-w-sm bg-gray-900 shadow-md rounded-lg p-6 border-dashed border-2 border-gray-700">
-        <img
-            src="https://scontent.fdac24-2.fna.fbcdn.net/v/t1.6435-9/81216474_2662748360506713_6511009479721484288_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=174925&_nc_eui2=AeHJB0RP7M-1tAEEk8I5Ck_tD9pLqD4cqXMP2kuoPhypcwTMObQm_gdJ-40TTb8HuH8YI4gKQPzEfPsigC38c8aU&_nc_ohc=JaXSn1-qgUUAX8Wq3eO&tn=NQD4WR2DcDdIMNpg&_nc_ht=scontent.fdac24-2.fna&oh=00_AfDDf2-8StbOGPh3vU040gVlg--JKone1pUD4iC7Ex3-nA&oe=6383C3DE"
-            alt="Just a flower"
-            class="p-8 rounded-t-lg"
-        />
-        <div class="px-5 pb-5">
-            <h2 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-                Parvez islam
-            </h2>
-        </div>
-    </div>,
+   
     <div class="max-w-sm bg-gray-900 shadow-md rounded-lg p-6 border-dashed border-2 border-gray-700">
         <img
             src="https://w0.peakpx.com/wallpaper/400/63/HD-wallpaper-david-beckham-hoot-portrait-english-footballer-face-2018-handsome-man.jpg"
@@ -88,20 +77,7 @@ let slides = [
 
         </div>
     </div>,
-    <div class="max-w-sm bg-white rounded-lg shadow-md dark:bg-gray-800 dark:border-gray-700">
-        <img
-            class="p-8 rounded-t-lg"
-            src="https://scontent.fdac24-2.fna.fbcdn.net/v/t39.30808-6/259473793_4579584965489700_1766194609300175689_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=8bfeb9&_nc_eui2=AeEK2ikd6PUjjWxi0dEc7DkOjqvoPGBg9C6Oq-g8YGD0Lnzt54caKQDUhZG05sZdiOiRKyA4Uk7KMkS9Ewr0c-4h&_nc_ohc=S_59pYmqj5gAX-DA7V7&_nc_ht=scontent.fdac24-2.fna&oh=00_AfCGVx-O8K09pHKCgXy2ReN6ZywePeqbV70Pdk9_N38CeA&oe=63653890"
-            alt=""
-        />
-
-        <div class="px-5 pb-5">
-            <h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-                David Parvez
-            </h5>
-
-        </div>
-    </div>,
+    
     <div class="max-w-sm bg-white rounded-lg shadow-md dark:bg-gray-800 dark:border-gray-700">
         <img
             class="p-8 rounded-t-lg"

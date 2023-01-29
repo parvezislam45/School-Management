@@ -10,7 +10,7 @@ const Serve = () => {
             <div className='container mx-auto grid grid-cols-1 md:grid-cols-3 gap-3 mt-14 gap-y-6'>
             <div class="card w-96 bg-base-100">
                 <figure class="px-10 pt-10">
-                    <img src="https://i.ibb.co/TPfZ3M6/1.jpg" alt="Shoes" class="rounded-xl w-28 h-28" />
+                    <img src="https://i.postimg.cc/K8LCn02j/Screenshot-2023-01-29-223111.jpg" alt="Shoes" class="rounded-xl w-28 h-28" />
                 </figure>
                 <div class="card-body items-center text-center">
                     <h2 class="card-title text-2xl font-bold">Online Education</h2>
@@ -20,7 +20,7 @@ const Serve = () => {
             </div>
             <div class="card w-96 bg-base-100">
                 <figure class="px-10 pt-10">
-                    <img src="https://i.ibb.co/XJDCcrP/2.jpg" alt="Shoes" class="rounded-xl w-28 h-28" />
+                    <img src="https://i.postimg.cc/xTgBgXJD/Screenshot-2023-01-29-223142.jpg" alt="Shoes" class="rounded-xl w-28 h-28" />
                 </figure>
                 <div class="card-body items-center text-center">
                     <h2 class="card-title text-2xl font-bold">Programs & Courses</h2>
@@ -30,7 +30,7 @@ const Serve = () => {
             </div>
             <div class="card w-96 bg-base-100">
                 <figure class="px-10 pt-10">
-                    <img src="https://i.ibb.co/Cvg0JkW/3.jpg" alt="Shoes" class="rounded-xl w-28 h-28" />
+                    <img src="https://i.postimg.cc/3x805cx0/Screenshot-2023-01-29-223205.jpg" alt="Shoes" class="rounded-xl w-28 h-28" />
                 </figure>
                 <div class="card-body items-center text-center">
                     <h2 class="card-title text-2xl font-bold">Campus Events</h2>
